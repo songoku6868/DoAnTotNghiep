@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ Thống Cảnh Báo Ngã AI - Web Pro</title>
+    <style>
+        body { background-color: #1a1a2e; color: #fff; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px;}
+        h1 { text-align: center; color: #4facf7; }
+        .tabs { display: flex; justify-content: center; margin-bottom: 20px; border-bottom: 2px solid #333;}
+        .tab-btn { background: none; border: none; color: #888; font-size: 18px; padding: 15px 30px; cursor: pointer; font-weight: bold; transition: 0.3s;}
+        .tab-btn:hover { color: #fff; }
+        .tab-btn.active { color: #4facf7; border-bottom: 3px solid #4facf7; }
+        .tab-content { display: none; max-width: 1200px; margin: 0 auto; }
+        .tab-content.active { display: flex; gap: 30px; }
+        .sidebar { background-color: #16213e; padding: 25px; border-radius: 12px; width: 320px; }
+        .video-box { flex-grow: 1; background: #0f3460; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center;}
+
+        button.primary { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; cursor: pointer; background-color: #0052cc; color: white; border: none; border-radius: 8px; margin-bottom: 15px; transition: 0.2s;}
+        button.primary:hover { background-color: #0043a8; }
+        button.danger { background-color: #cc0000; }
+        button.danger:hover { background-color: #a30000; }
+        button.success { background-color: #28a745; }
+        button.success:hover { background-color: #218838; }
+
+        .switch { display: flex; align-items: center; margin-bottom: 15px; font-size: 16px; }
+        .switch input { margin-right: 10px; width: 18px; height: 18px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #16213e; border-radius: 8px; overflow: hidden;}
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #333; }
+        th { background: #0f3460; color: #4facf7; }
+
+        #imgModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 999;}
+        #imgModal img { max-width: 80%; max-height: 80%; border: 4px solid #fff; border-radius: 10px;}
+
+        .progress-bar { width: 100%; height: 20px; background: #333; border-radius: 10px; margin: 15px 0; overflow: hidden;}
+        .progress-fill { height: 100%; background: #4facf7; width: 0%; transition: 0.2s;}
+
+        /* CSS MỚI CHO MÀN HÌNH CHỜ (PLACEHOLDER) */
+        .screen-container {
+            width: 100%; max-width: 640px; height: 480px;
+            background: #0a1128; border-radius: 8px;
+            display: flex; justify-content: center; align-items: center;
+            position: relative; overflow: hidden;
+            border: 2px dashed #4facf7;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .placeholder {
+            text-align: center; color: #888;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .placeholder i { font-size: 50px; margin-bottom: 15px; display: block; font-style: normal; }
+        .pulse { animation: pulseAnim 2s infinite; }
+        @keyframes pulseAnim {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        /* Ẩn ảnh khi không có tín hiệu */
+        .view-screen {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; object-fit: contain;
+            display: none; background: black;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI FALL DETECTION SYSTEM - V2.0 PRO</h1>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('live')">🎥 GIÁM SÁT TRỰC TUYẾN</button>
+        <button class="tab-btn" onclick="switchTab('video')">🎞️ PHÂN TÍCH VIDEO</button>
+        <button class="tab-btn" onclick="switchTab('history')">📜 LỊCH SỬ CẢNH BÁO</button>
+    </div>
+
+    <!-- TAB 1: LIVE -->
+    <div id="tab-live" class="tab-content active">
+        <div class="sidebar">
+            <h3 style="margin-top: 0; color: #4facf7;">⚙️ CẤU HÌNH HỆ THỐNG</h3>
+            <button id="btnStartLive" class="primary">▶ BẮT ĐẦU CAMERA</button>
+            <button id="btnStopLive" class="primary danger" style="display: none;">⏹ DỪNG LẠI</button>
+            <hr style="border-color: #333; margin: 20px 0;">
+            <div class="switch"><input type="checkbox" id="cbSound" checked> <label>🔊 Còi hú tại chỗ</label></div>
+            <div class="switch"><input type="checkbox" id="cbTelegram" checked> <label>✈️ Gửi tin Telegram</label></div>
+            <div class="switch"><input type="checkbox" id="cbPrivacy"> <label>🌫️ Chế độ riêng tư (Blur)</label></div>
+            <div style="color: yellow; margin-top: 20px;" id="liveStats">Sẵn sàng...</div>
+        </div>
+        <div class="video-box">
+            <!-- MÀN HÌNH HIỂN THỊ LIVE -->
+            <div class="screen-container">
+                <div id="livePlaceholder" class="placeholder pulse">
+                    <i>💤</i>
+                    <h3 style="margin: 0;">CAMERA ĐANG TẮT</h3>
+                    <p>Nhấn "Bắt đầu camera" để giám sát</p>
+                </div>
+                <img id="liveImg" class="view-screen" src="">
+            </div>
+            <h2 id="liveStatus" style="color: #888; margin-top: 20px;">HỆ THỐNG ĐANG CHỜ</h2>
+        </div>
+    </div>
+
+    <!-- TAB 2: VIDEO OFFLINE -->
+    <div id="tab-video" class="tab-content">
+        <div class="sidebar">
+            <h3 style="margin-top: 0; color: #4facf7;">📁 TẢI VIDEO LÊN</h3>
+            <input type="file" id="videoInput" accept="video/mp4,video/avi,video/mkv" style="margin-bottom: 15px; color: white; width: 100%; padding: 10px; background: #0a1128; border-radius: 5px;">
+            <button id="btnUpload" class="primary">🚀 BẮT ĐẦU PHÂN TÍCH</button>
+            <div class="progress-bar"><div class="progress-fill" id="vidProgress"></div></div>
+            <h3 style="color: #ff4d4d;">Số lần ngã: <span id="vidFalls">0</span></h3>
+            <h3 style="color: #4facf7;">Max tin cậy (Peak Prob): <span id="vidAcc">0%</span></h3>
+
+            <a id="btnDownloadVid" style="display: none; text-decoration: none;" download>
+                <button class="primary success">📥 TẢI VIDEO KẾT QUẢ</button>
+            </a>
+        </div>
+        <div class="video-box">
+            <!-- MÀN HÌNH HIỂN THỊ VIDEO UPLOAD -->
+            <div class="screen-container">
+                <div id="vidPlaceholder" class="placeholder">
+                    <i>🎞️</i>
+                    <h3 style="margin: 0;">CHƯA CÓ DỮ LIỆU</h3>
+                    <p>Vui lòng chọn video để phân tích</p>
+                </div>
+                <img id="vidImg" class="view-screen" src="">
+            </div>
+            <h2 id="vidStatus" style="color: #888; margin-top: 20px;">CHƯA PHÂN TÍCH</h2>
+        </div>
+    </div>
+
+    <!-- TAB 3: HISTORY -->
+    <div id="tab-history" class="tab-content" style="flex-direction: column;">
+        <button class="primary" style="width: 200px; align-self: flex-start;" onclick="loadHistory()">🔄 LÀM MỚI DỮ LIỆU</button>
+        <table>
+            <thead><tr><th>ID</th><th>Thời gian</th><th>Độ tin cậy</th><th>Hành động</th></tr></thead>
+            <tbody id="historyTable"></tbody>
+        </table>
+    </div>
+
+    <!-- Hidden Elements -->
+    <video id="webcam" autoplay playsinline style="display:none;"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <audio id="siren" src="/static/siren.wav" preload="auto"></audio>
+
+    <div id="imgModal" onclick="this.style.display='none'">
+        <img id="modalImg" src="">
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            event.target.classList.add('active');
+            if(tabId === 'history') loadHistory();
+        }
+
+        const video = document.getElementById('webcam'), canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+        const siren = document.getElementById('siren');
+        const liveImg = document.getElementById('liveImg'), livePlaceholder = document.getElementById('livePlaceholder'), liveStatus = document.getElementById('liveStatus');
+        const vidImg = document.getElementById('vidImg'), vidPlaceholder = document.getElementById('vidPlaceholder'), vidStatus = document.getElementById('vidStatus');
+
+        let liveWs, isLiveRunning = false;
+
+        function captureAndSend() {
+            if (!isLiveRunning || liveWs.readyState !== WebSocket.OPEN) return;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            liveWs.send(JSON.stringify({
+                image: canvas.toDataURL('image/jpeg', 0.6),
+                privacy: document.getElementById('cbPrivacy').checked,
+                telegram: document.getElementById('cbTelegram').checked
+            }));
+        }
+
+        // KHI BẤM BẮT ĐẦU LIVE
+        document.getElementById('btnStartLive').onclick = () => {
+            navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } }).then(stream => {
+                video.srcObject = stream; video.play();
+                document.getElementById('btnStartLive').style.display = 'none';
+                document.getElementById('btnStopLive').style.display = 'block';
+
+                // Ẩn placeholder, hiện ảnh
+                livePlaceholder.style.display = 'none';
+                liveImg.style.display = 'block';
+                liveStatus.innerText = "ĐANG KẾT NỐI SERVER...";
+                liveStatus.style.color = "#4facf7";
+
+                liveWs = new WebSocket("ws://" + window.location.host + "/ws/live");
+                liveWs.onopen = () => {
+                    isLiveRunning = true; canvas.width = 640; canvas.height = 480;
+                    captureAndSend();
+                };
+
+                liveWs.onmessage = (e) => {
+                    const data = JSON.parse(e.data);
+                    liveImg.src = data.image;
+                    document.getElementById('liveStats').innerText = `Xác suất ngã: ${data.prob.toFixed(2)}`;
+
+                    if (data.is_fallen_state) {
+                        liveStatus.innerText = "🚨 PHÁT HIỆN NGÃ!"; liveStatus.style.color = "#ff4d4d";
+                        if(document.getElementById('cbSound').checked) siren.play().catch(e=>{});
+                    } else {
+                        liveStatus.innerText = "HỆ THỐNG AN TOÀN"; liveStatus.style.color = "#4caf50";
+                        siren.pause(); siren.currentTime = 0;
+                    }
+
+                    if (isLiveRunning) requestAnimationFrame(captureAndSend);
+                };
+            });
+        };
+
+        // KHI BẤM DỪNG LIVE
+        document.getElementById('btnStopLive').onclick = () => {
+            isLiveRunning = false;
+            if(liveWs) liveWs.close();
+            if(video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
+
+            document.getElementById('btnStartLive').style.display = 'block';
+            document.getElementById('btnStopLive').style.display = 'none';
+
+            // Hiện lại placeholder, ẩn ảnh
+            liveImg.style.display = 'none';
+            liveImg.src = "";
+            livePlaceholder.style.display = 'flex';
+
+            liveStatus.innerText = "ĐÃ DỪNG GIÁM SÁT";
+            liveStatus.style.color = "#888";
+            document.getElementById('liveStats').innerText = "Sẵn sàng...";
+        };
+
+        // KHI BẤM PHÂN TÍCH VIDEO
+        document.getElementById('btnUpload').onclick = async () => {
+            const file = document.getElementById('videoInput').files[0];
+            if(!file) return alert("Vui lòng chọn video để tải lên!");
+
+            // Đổi UI sang trạng thái phân tích
+            vidStatus.innerText = "ĐANG TẢI LÊN...";
+            vidStatus.style.color = "#4facf7";
+            document.getElementById('btnDownloadVid').style.display = 'none';
+            document.getElementById('vidFalls').innerText = "0";
+            document.getElementById('vidAcc').innerText = "0%";
+            document.getElementById('vidProgress').style.width = "0%";
+
+            let formData = new FormData(); formData.append("file", file);
+            let res = await fetch("/api/upload_video", { method: "POST", body: formData });
+            let { filename } = await res.json();
+
+            vidStatus.innerText = "ĐANG PHÂN TÍCH (VUI LÒNG CHỜ)...";
+            vidPlaceholder.style.display = 'none';
+            vidImg.style.display = 'block';
+
+            const vidWs = new WebSocket(`ws://${window.location.host}/ws/process_video/${filename}`);
+
+            vidWs.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+
+                if(data.done) {
+                    vidStatus.innerText = "✅ HOÀN THÀNH PHÂN TÍCH!";
+                    vidStatus.style.color = "#4caf50";
+                    document.getElementById('vidFalls').innerText = data.falls;
+                    document.getElementById('vidAcc').innerText = data.max_prob + "%";
+
+                    let btnDl = document.getElementById('btnDownloadVid');
+                    btnDl.href = data.video_url;
+                    btnDl.style.display = 'block';
+                    return;
+                }
+
+                vidImg.src = data.image;
+                document.getElementById('vidProgress').style.width = data.progress + "%";
+                document.getElementById('vidFalls').innerText = data.falls;
+                document.getElementById('vidAcc').innerText = (data.prob * 100).toFixed(1) + "%";
+
+                vidWs.send("next");
+            };
+        };
+
+        // KHI TẢI LỊCH SỬ
+        async function loadHistory() {
+            let res = await fetch("/api/history");
+            let logs = await res.json();
+            let tbody = document.getElementById('historyTable');
+            tbody.innerHTML = "";
+            if(logs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#888;">Chưa có dữ liệu cảnh báo.</td></tr>`;
+            }
+            logs.forEach(l => {
+                tbody.innerHTML += `<tr>
+                    <td>#${l.id}</td><td>${l.time}</td>
+                    <td style="color:#ff4d4d; font-weight:bold;">${(l.prob * 100).toFixed(1)}%</td>
+                    <td><button onclick="viewImg('${l.img}')" style="padding: 8px 15px; cursor:pointer; background: #4facf7; color: white; border: none; border-radius: 5px;">📷 Xem Ảnh</button></td>
+                </tr>`;
+            });
+        }
+
+        function viewImg(src) {
+            document.getElementById('modalImg').src = src;
+            document.getElementById('imgModal').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>

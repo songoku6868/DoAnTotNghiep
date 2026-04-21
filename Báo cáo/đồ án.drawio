@@ -1,0 +1,49 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Trang-1" id="f_VUxXkG_HfGkkEWqbQJ">
+    <mxGraphModel dx="1091" dy="794" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="icnAmkC55MvZueh7JSMS-9" edge="1" parent="1" source="icnAmkC55MvZueh7JSMS-1" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;fontSize=12;startSize=8;endSize=8;" target="icnAmkC55MvZueh7JSMS-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="icnAmkC55MvZueh7JSMS-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Đầu vào&amp;nbsp;&lt;div&gt;(video dữ liệu đầu vào)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="62" width="143" x="-28" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="icnAmkC55MvZueh7JSMS-12" edge="1" parent="1" source="icnAmkC55MvZueh7JSMS-2" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8;" target="icnAmkC55MvZueh7JSMS-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="icnAmkC55MvZueh7JSMS-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Trích xuất Pose&lt;div&gt;(trích xuất bộ xương lấy tọa độ (x,y) của 17 điểm khớp)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="62" width="143" x="174" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="icnAmkC55MvZueh7JSMS-13" edge="1" parent="1" source="icnAmkC55MvZueh7JSMS-3" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8;" target="icnAmkC55MvZueh7JSMS-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="icnAmkC55MvZueh7JSMS-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Làm sạch dữ liệu&amp;nbsp;&lt;div&gt;(lọc nhiễu và khôi phục dữ liệu bằng nội suy tuyến tính)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="62" width="143" x="388" y="17" as="geometry" />
+        </mxCell>
+        <mxCell id="icnAmkC55MvZueh7JSMS-14" edge="1" parent="1" source="icnAmkC55MvZueh7JSMS-4" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8;" target="icnAmkC55MvZueh7JSMS-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="icnAmkC55MvZueh7JSMS-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Đặc trưng động học&lt;div&gt;(tính vận tốc, độ cao hông, góc cơ thể mở rộng thành 70 đặc trưng)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="62" width="143" x="388" y="144" as="geometry" />
+        </mxCell>
+        <mxCell id="icnAmkC55MvZueh7JSMS-15" edge="1" parent="1" source="icnAmkC55MvZueh7JSMS-5" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8;" target="icnAmkC55MvZueh7JSMS-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="icnAmkC55MvZueh7JSMS-5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Chuỗi thời gian&lt;div&gt;(gom nhóm chuỗi dữ liệu thành sliding window)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="62" width="143" x="180" y="142" as="geometry" />
+        </mxCell>
+        <mxCell id="icnAmkC55MvZueh7JSMS-16" edge="1" parent="1" source="icnAmkC55MvZueh7JSMS-6" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8;" target="icnAmkC55MvZueh7JSMS-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="icnAmkC55MvZueh7JSMS-6" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="phân loại học sâu&lt;div&gt;(mạng nơ ron hồi quy hai chiều - BiLSTM)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="62" width="143" x="-28" y="144" as="geometry" />
+        </mxCell>
+        <mxCell id="icnAmkC55MvZueh7JSMS-7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Đầu ra&lt;div&gt;(cảnh báo té ngã/ bình thường)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="62" width="143" x="-28" y="247" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
