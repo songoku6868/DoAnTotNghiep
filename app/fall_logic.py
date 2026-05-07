@@ -11,7 +11,7 @@ class FallDetector:
         self.scaler = joblib.load("scaler.pkl")
         self.ort_session = ort.InferenceSession("best_bilstm_model.onnx")
         self.input_name = self.ort_session.get_inputs()[0].name
-        self.yolo = YOLO('yolo11n-pose.pt')
+        self.yolo = YOLO('yolo26n-pose.pt')
 
         self.SEQ_LENGTH = 60
         self.CONF_THRESHOLD = 0.3
