@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Hệ Thống Cảnh Báo Ngã AI - Web Pro</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
     <style>
         body { background-color: #1a1a2e; color: #fff; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px;}
         h1 { text-align: center; color: #4facf7; }
@@ -287,7 +288,10 @@
                 tbody.innerHTML += `<tr>
                     <td>#${l.id}</td><td>${l.time}</td>
                     <td style="color:#ff4d4d; font-weight:bold;">${(l.prob * 100).toFixed(1)}%</td>
-                    <td><button onclick="viewImg('${l.img}')" style="padding: 8px 15px; cursor:pointer; background: #4facf7; color: white; border: none; border-radius: 5px;">📷 Xem Ảnh</button></td>
+                    <td>
+                        <button onclick="viewImg('${l.img}')" style="padding: 8px 15px; cursor:pointer; background: #4facf7; color: white; border: none; border-radius: 5px;">📷 Xem Ảnh</button>
+                        <button onclick="deleteRecord(${l.id})" style="padding: 8px 15px; cursor:pointer; background: #cc0000; color: white; border: none; border-radius: 5px; margin-left: 5px;">🗑 Xóa</button>
+                    </td>
                 </tr>`;
             });
         }
@@ -295,6 +299,19 @@
         function viewImg(src) {
             document.getElementById('modalImg').src = src;
             document.getElementById('imgModal').style.display = 'flex';
+        }
+        async function deleteRecord(id) {
+            // Hỏi xác nhận trước khi xóa
+            if (!confirm(`Bạn có chắc chắn muốn xóa dữ liệu ID #${id} không?`)) return;
+
+            let res = await fetch(`/api/delete_record/${id}`, { method: "DELETE" });
+
+            if (res.ok) {
+                // Tải lại bảng sau khi xóa thành công
+                loadHistory();
+            } else {
+                alert("Đã xảy ra lỗi khi xóa dữ liệu!");
+            }
         }
     </script>
 </body>

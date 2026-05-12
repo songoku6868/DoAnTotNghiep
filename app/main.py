@@ -194,6 +194,31 @@ async def process_video_ws(websocket: WebSocket, filename: str):
         out_video.release()
 
 
+@app.delete("/api/delete_record/{record_id}")
+def delete_record(record_id: int):
+    # Lấy tên file ảnh từ database trước khi xóa
+    cursor.execute("SELECT path FROM fall_events WHERE id = ?", (record_id,))
+    row = cursor.fetchone()
+
+    if row:
+        filename = row[0]
+        file_path = os.path.join(LOG_DIR, filename)
+
+        # Xóa file ảnh trong thư mục (nếu nó tồn tại)
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception:
+                pass
+
+        # Xóa dữ liệu trong database
+        cursor.execute("DELETE FROM fall_events WHERE id = ?", (record_id,))
+        db_conn.commit()
+
+        return {"status": "success", "message": f"Đã xóa bản ghi #{record_id}"}
+
+    return JSONResponse(status_code=404, content={"message": "Không tìm thấy dữ liệu"})
+
 if __name__ == "__main__":
     import uvicorn
 

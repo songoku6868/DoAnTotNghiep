@@ -17,7 +17,7 @@ class FallDetector:
         self.CONF_THRESHOLD = 0.3
         self.PREDICT_INTERVAL = 3
         self.SMOOTH_WINDOW = 5
-        self.FALL_CONFIRM_FRAMES = 5
+        self.FALL_CONFIRM_FRAMES = 3
 
         self.frame_buffer = deque(maxlen=self.SEQ_LENGTH)
         self.pred_buffer = deque(maxlen=self.SMOOTH_WINDOW)
@@ -41,7 +41,13 @@ class FallDetector:
             display_frame = cv2.GaussianBlur(display_frame, (99, 99), 30)
 
         is_fall_detected = False
+        valid_pose = False
+        draw_data = None
+        draw_confs = None
 
+        # ==========================================
+        # BƯỚC 1: LẤY DỮ LIỆU TỪ YOLO
+        # ==========================================
         results = self.yolo.predict(frame, verbose=False)
 
         if results[0].keypoints is not None and len(results[0].keypoints.xy) > 0 and len(
@@ -50,14 +56,14 @@ class FallDetector:
             confs = results[0].keypoints.conf[0].cpu().numpy()
 
             data = []
-            current_confs = []  # Lưu độ tin cậy của frame HIỆN TẠI
+            current_confs = []
 
             for i in range(17):
                 x, y = keypoints[i]
                 conf = confs[i]
                 current_confs.append(conf)
 
-                # Logic nhồi data cho AI Bi-LSTM (Bù data nếu điểm bị khuất)
+                # Logic nhồi data cho AI Bi-LSTM
                 if conf < self.CONF_THRESHOLD and self.prev_base_data is not None:
                     data.extend([self.prev_base_data[i * 2], self.prev_base_data[i * 2 + 1]])
                 else:
@@ -77,24 +83,18 @@ class FallDetector:
             self.last_known_feat = feat
             self.frame_buffer.append(feat)
 
-            status_c = (0, 255, 0) if not self.is_fallen_state else (0, 0, 255)
-
-            # VẼ KHUNG XƯƠNG: Chỉ vẽ khi YOLO nhìn thấy rõ điểm đó (conf > threshold) để chống lỗi mạng nhện
-            for link in self.skeleton:
-                pt1_idx, pt2_idx = link[0], link[1]
-
-                if current_confs[pt1_idx] > self.CONF_THRESHOLD and current_confs[pt2_idx] > self.CONF_THRESHOLD:
-                    pt1 = (int(data[pt1_idx * 2]), int(data[pt1_idx * 2 + 1]))
-                    pt2 = (int(data[pt2_idx * 2]), int(data[pt2_idx * 2 + 1]))
-                    if pt1[0] > 0 and pt1[1] > 0 and pt2[0] > 0 and pt2[1] > 0:
-                        cv2.line(display_frame, pt1, pt2, status_c, 3)
-                        cv2.circle(display_frame, pt1, 4, (255, 255, 255), -1)
+            # Lưu lại dữ liệu để lát nữa vẽ (sau khi AI dự đoán xong)
+            valid_pose = True
+            draw_data = data
+            draw_confs = current_confs
 
         else:
             if self.last_known_feat is not None:
                 self.frame_buffer.append(self.last_known_feat)
 
-        # Chạy AI Bi-LSTM
+        # ==========================================
+        # BƯỚC 2: CHẠY AI DỰ ĐOÁN & CẬP NHẬT TRẠNG THÁI
+        # ==========================================
         if len(self.frame_buffer) == self.SEQ_LENGTH:
             if self.frame_count % self.PREDICT_INTERVAL == 0:
                 try:
@@ -106,7 +106,7 @@ class FallDetector:
 
             self.smooth_prediction = sum(self.pred_buffer) / len(self.pred_buffer) if self.pred_buffer else 0
 
-            if self.smooth_prediction > 0.6:
+            if self.smooth_prediction > 0.5:
                 self.fall_frames_count += 1
             elif self.smooth_prediction < 0.3:
                 self.fall_frames_count = 0
@@ -115,5 +115,22 @@ class FallDetector:
             if self.fall_frames_count >= self.FALL_CONFIRM_FRAMES and not self.is_fallen_state:
                 self.is_fallen_state = True
                 is_fall_detected = True
+
+        # ==========================================
+        # BƯỚC 3: VẼ KHUNG XƯƠNG DỰA TRÊN TRẠNG THÁI MỚI
+        # ==========================================
+        if valid_pose:
+            # Lúc này self.is_fallen_state đã mang giá trị MỚI NHẤT sau khi AI tính toán
+            status_c = (0, 0, 255) if self.is_fallen_state else (0, 255, 0)
+
+            for link in self.skeleton:
+                pt1_idx, pt2_idx = link[0], link[1]
+
+                if draw_confs[pt1_idx] > self.CONF_THRESHOLD and draw_confs[pt2_idx] > self.CONF_THRESHOLD:
+                    pt1 = (int(draw_data[pt1_idx * 2]), int(draw_data[pt1_idx * 2 + 1]))
+                    pt2 = (int(draw_data[pt2_idx * 2]), int(draw_data[pt2_idx * 2 + 1]))
+                    if pt1[0] > 0 and pt1[1] > 0 and pt2[0] > 0 and pt2[1] > 0:
+                        cv2.line(display_frame, pt1, pt2, status_c, 3)
+                        cv2.circle(display_frame, pt1, 4, (255, 255, 255), -1)
 
         return display_frame, is_fall_detected, self.smooth_prediction, self.is_fallen_state
